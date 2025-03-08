@@ -1,43 +1,53 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerAttack : MonoBehaviour
 {
     [SerializeField] private float attackCooldown;
-    [SerializeField] private Transform firePoint;   
-    [SerializeField] private GameObject[] fireballs;
+    [SerializeField] private Transform firePoint, parent;
+    [SerializeField] GameObject explosion,fireBall;
 
 
     private Animator anim;
     private PlayerMovement playerMovement;
-    private float cooldownTimer=1000;
+    private float cooldownTimer = 1000;
 
     private void Awake()
     {
-        anim=GetComponent<Animator>();
-        playerMovement=GetComponent<PlayerMovement>();
+        anim = GetComponent<Animator>();
+        playerMovement = GetComponent<PlayerMovement>();
 
     }
 
     private void Update()
     {
-        if(Input.GetMouseButton(0) && cooldownTimer>attackCooldown && playerMovement.canAttack())
+        if (Input.GetMouseButton(0) && cooldownTimer > attackCooldown && playerMovement.canAttack())
         {
             Attack();
 
         }
-        cooldownTimer+=Time.deltaTime;
+        cooldownTimer += Time.deltaTime;
     }
 
     private void Attack()
     {
         anim.SetTrigger("attack");
-        cooldownTimer=0;
+        cooldownTimer = 0;
 
-        fireballs[0].transform.position=firePoint.position;
-        fireballs[0].GetComponent<Projectile>().SetDirection(Mathf.Sign(transform.localScale.x));
-
-
+        GameObject temp = Instantiate(fireBall, firePoint.position, firePoint.rotation);
+        StartCoroutine(temp.GetComponent<Projectile>().SetDirection(Mathf.Sign(transform.localScale.x), explosion));
     }
+
+    // //to apply pooling to fireballs
+    // private int FindFireball()
+    // {
+    //     for (int i = 0; i < fireballs.Length; i++)
+    //     {
+    //         if (!fireballs[i].activeInHierarchy)
+    //         { return i; }
+    //     }
+    //     return 0;
+    // }
 
 
 }

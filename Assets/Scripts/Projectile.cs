@@ -1,56 +1,74 @@
 using UnityEngine;
+using System.Collections;
 
 public class Projectile : MonoBehaviour
 {
-   [SerializeField] private float speed;
-   private bool hit;
-   private BoxCollider2D boxCollider;
-   private Animator anim;
-   private float direction;
+  [SerializeField] private float speed;
+  private bool hit;
+  private BoxCollider2D boxCollider;
+  private Animator anim;
+  private float direction;
+  private float lifetime;
+  GameObject explosionAnim;
 
 
-   private void Awake()
-   {
-        anim =GetComponent<Animator>();
-        boxCollider=GetComponent<BoxCollider2D>();
-   }
+  private void Awake()
+  {
+    anim = GetComponent<Animator>();
+    boxCollider = GetComponent<BoxCollider2D>();
+  }
 
-   private void Update()
-   {
-        if (hit) return;
-        float movementSpeed=speed*Time.deltaTime* direction;
-        transform.Translate(movementSpeed,0,0);
+  private void Update()
+  {
+    if (hit) return;
+    float movementSpeed = speed * Time.deltaTime * direction;
+    transform.Translate(movementSpeed, 0, 0);
+  }
 
-   }
+  private void OnTriggerEnter2D(Collider2D collision)
+  {
+    hit = true;
+    boxCollider.enabled = false;
+    anim.SetTrigger("explode");
+    StartCoroutine(onCollision());
+  }
 
-   private void OnTriggerEnter2D(Collider2D collision)
-   {
-     hit=true;
-     boxCollider.enabled=false;
-     anim.SetTrigger("explode");
+  IEnumerator onCollision()
+  {
+    GameObject temp = Instantiate(explosionAnim, transform.position, transform.rotation);
+    this.gameObject.GetComponent<SpriteRenderer>().enabled = false;
 
-   }
+    yield return new WaitForSeconds(.5f);
+    Destroy(temp);
+    Destroy(this.gameObject);
+  }
 
-   public void SetDirection( float _direction)
-   {
-    direction=_direction;
+  public IEnumerator SetDirection(float _direction, GameObject explosion)
+  {
+    lifetime = 0;
+    direction = _direction;
     gameObject.SetActive(true);
-    hit=false;
-    boxCollider.enabled=true;
+    hit = false;
+    boxCollider.enabled = true;
+    explosionAnim = explosion;
 
-    float localScaleX=transform.localScale.x;
-    if (Mathf.Sign(localScaleX)!=_direction)
+    float localScaleX = transform.localScale.x;
+    if (Mathf.Sign(localScaleX) != _direction)
     {
-        localScaleX=-localScaleX;
+      localScaleX = -localScaleX;
     }
 
-    transform.localScale = new Vector2(localScaleX,transform.localScale.y);
+    transform.localScale = new Vector2(localScaleX, transform.localScale.y);
     GetComponent<Rigidbody2D>().AddForce(transform.forward * speed);
 
-   }
+    yield return new WaitForSeconds(2);
 
-   private void deactivate()
-   {
+    this.gameObject.SetActive(false);
+
+  }
+
+  private void deactivate()
+  {
     gameObject.SetActive(false);
-   }
+  }
 }
